@@ -1,5 +1,5 @@
 "use client"
-import type React from "react"
+import React, { useState } from "react"
 import Header from "./Header"
 import TransactionDetails from "./TransactionDetails"
 import AlertBox from "./AlertBox"
@@ -9,6 +9,29 @@ import PaymentInfo from "./PaymentInfo"
 import DomainTransferInstructions from "./DomainTransferInstructions"
 
 const TransactionPage: React.FC = () => {
+  const [transactionId, setTransactionId] = useState<string | null>("12345") // Example ID
+  const [loadingAction, setLoadingAction] = useState<string | null>(null)
+
+  const postAction = async (action: string) => {
+    if (!transactionId) return
+    setLoadingAction(action)
+
+    try {
+      // Example API call — replace with your actual logic
+      const res = await fetch(`/api/transaction/${transactionId}/${action}`, {
+        method: "POST",
+      })
+
+      if (!res.ok) throw new Error("Failed to perform action")
+      alert(`Action '${action}' completed successfully!`)
+    } catch (err) {
+      console.error(err)
+      alert(`Failed to ${action}`)
+    } finally {
+      setLoadingAction(null)
+    }
+  }
+
   return (
     <main className="flex flex-col bg-zinc-100 min-h-screen">
       <Header />
@@ -55,4 +78,3 @@ const TransactionPage: React.FC = () => {
 }
 
 export default TransactionPage
-
