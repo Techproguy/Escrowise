@@ -65,11 +65,31 @@ function TransactionForm({ transaction, onTransactionChange }: TransactionFormPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase.from('transactions').insert([
-      { title: formData.title, role: formData.role, currency: formData.currency, items },
-    ]);
-    if (error) console.error('Error inserting data:', error);
-    else console.log('Data inserted successfully:', data);
+    try {
+      const response = await fetch("/api/transactions/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          role: formData.role,
+          currency: formData.currency,
+          items,
+          inspectionPeriod: transaction.inspectionPeriod,
+        }),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        console.log('Transaction created successfully:', result.transaction);
+        // Redirect or show success message
+      } else {
+        console.error('Error creating transaction:', result.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 
   const formVariants = {

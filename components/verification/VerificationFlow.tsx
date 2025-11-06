@@ -73,15 +73,35 @@ const VerificationFlow: React.FC = () => {
     setCurrentStep("documentUpload")
   }
 
-  const handleDocumentUploadSubmit = (idDoc: DocumentInfo, addressDoc: DocumentInfo) => {
+  const handleDocumentUploadSubmit = async (idDoc: DocumentInfo, addressDoc: DocumentInfo) => {
     setIdDocument(idDoc)
     setAddressDocument(addressDoc)
     setCurrentStep("submitting")
 
-    // Simulate document submission
-    setTimeout(() => {
-      setCurrentStep("summary")
-    }, 2000)
+    try {
+      const response = await fetch("/api/verification/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountType,
+          personalDetails,
+          idDocument: idDoc,
+          addressDocument: addressDoc,
+        }),
+      })
+
+      if (response.ok) {
+        setCurrentStep("summary")
+      } else {
+        console.error("Failed to submit verification")
+        // Handle error, perhaps show a message
+      }
+    } catch (error) {
+      console.error("Error submitting verification:", error)
+      // Handle error
+    }
   }
 
   const handleGoBack = () => {

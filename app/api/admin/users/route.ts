@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("user_profiles")
-    .select("id, full_name, verification_status, role, created_at")
+    .select("id, full_name, first_name, last_name, verification_status, role, account_type, created_at, email")
     .order("created_at", { ascending: false })
     .limit(limit);
 

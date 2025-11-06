@@ -140,6 +140,8 @@ const UsersPage: React.FC = () => {
           setError('No user data found.');
           return;
         }
+
+        console.log('Fetched users and profiles:', { usersData, profilesData });
         
         // Join the data
         const joinedData = usersData.map(user => {

@@ -4,8 +4,9 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 // GET /api/admin/transactions
 export async function GET(req: Request) {
+  // ✅ Check admin authentication
   const auth = await requireAdmin();
-  if (auth instanceof NextResponse) return auth;
+  if (auth instanceof NextResponse) return auth; // returns 401 if not authorized
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
@@ -15,31 +16,42 @@ export async function GET(req: Request) {
 
   const offset = (page - 1) * limit;
 
-  let query = supabaseAdmin
-    .from("escrow_transactions")
-    .select(`
-      *,
-      buyer:profiles!escrow_transactions_buyer_id_fkey(*),
-      seller:profiles!escrow_transactions_seller_id_fkey(*)
-    `, { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    // ✅ Base query
+    let query = supabaseAdmin
+      .from("escrow_transactions")
+      .select(
+        `
+        *,
+        buyer:profiles!escrow_transactions_buyer_id_fkey(*),
+        seller:profiles!escrow_transactions_seller_id_fkey(*)
+        `,
+        { count: "exact" }
+      )
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (status) {
-    query = query.eq("status", status);
+    // ✅ Optional filters
+    if (status) {
+      query = query.eq("status", status);
+    }
+
+    if (search) {
+      query = query.or(
+        `id.ilike.%${search}%,description.ilike.%${search}%,buyer.full_name.ilike.%${search}%,seller.full_name.ilike.%${search}%`
+      );
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Supabase error:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ data, total: count }, { status: 200 });
+  } catch (err: any) {
+    console.error("Server error:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-
-  if (search) {
-    query = query.or(
-      `id.ilike.%${search}%,description.ilike.%${search}%,buyer.full_name.ilike.%${search}%,seller.full_name.ilike.%${search}%`
-    );
-  }
-
-  const { data, error, count } = await query;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ data, total: count }, { status: 200 });
 }
