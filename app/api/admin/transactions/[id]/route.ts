@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/adminAuth";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
 
-  const { id } = params;
+  const { id } = await params;
   const updates = await request.json();
 
   const { data, error } = await supabaseAdmin
@@ -19,11 +19,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   return NextResponse.json(data);
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
 
-  const { id } = params;
+  const { id } = await params;
 
   const { error } = await supabaseAdmin.from("escrow_transactions").delete().eq("id", id);
 
